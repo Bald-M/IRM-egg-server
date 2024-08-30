@@ -6,6 +6,7 @@ class UserService extends Service {
     console.log('-----------------addUser-----------------');
     // console.log(user);
     user.registered_date = new Date();
+    user.username = user.email.split('@')[0];
     console.log(user);
 
     // Execute insert sql to the database
