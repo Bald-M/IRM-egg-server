@@ -30,6 +30,9 @@ module.exports = appInfo => {
       user: 'root',
       password: 'ABCabc_123',
       database: 'IRM',
+      define: {
+        freezeTableName: true,
+      },
     },
     // Mount to app
     app: true,
@@ -54,6 +57,11 @@ module.exports = appInfo => {
       enable: false,
       ignoreJson: true,
     },
+  };
+
+  config.cors = {
+    origin: '*',
+    allowMethods: 'GET,HEAD,PUT,POST,DELETE,PATCH',
   };
 
   return {
