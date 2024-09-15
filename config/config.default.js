@@ -29,7 +29,7 @@ module.exports = appInfo => {
       port: 3306,
       user: 'root',
       password: 'ABCabc_123',
-      database: 'IRM',
+      database: 'internship_application',
       define: {
         freezeTableName: true,
       },
@@ -47,7 +47,17 @@ module.exports = appInfo => {
     port: 3306,
     user: 'root',
     password: 'ABCabc_123',
-    database: 'IRM',
+    database: 'internship_application',
+    // NZ Auckland Time Zone
+    timezone: '+12:00',
+  };
+
+  // NodeMailer
+  exports.mail = {
+    service: 'Gmail',
+    user: 'zhang241166@gmail.com',
+    pass: 'ihqf eewy rehi htjr',
+    sender: 'Zihan Zhang',
   };
 
   // Security
@@ -59,6 +69,12 @@ module.exports = appInfo => {
     },
   };
 
+  // Jason Web Token
+  config.jwt = {
+    secret: 'MyIRMJasonWenTokenEncryption',
+  };
+
+  // CORS
   config.cors = {
     origin: '*',
     allowMethods: 'GET,HEAD,PUT,POST,DELETE,PATCH',

@@ -16,4 +16,12 @@ module.exports = {
     enable: true,
     package: 'egg-cors',
   },
+  nodemailer: {
+    enable: true,
+    package: 'nodemailer',
+  },
+  jwt: {
+    enable: true,
+    package: 'egg-jwt',
+  },
 };
