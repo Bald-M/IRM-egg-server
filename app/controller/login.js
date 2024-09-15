@@ -99,8 +99,10 @@ class LoginController extends Controller {
         throw new Error('Login Error', { cause: 'Invalid username or password' });
       }
 
-      // Check if the user is blocked or removed
-      if (users.status === 'Blocked' || users.status === 'Removed') {
+      // Check if the user is blocked, removed or pending
+      if (users.status === 0) {
+        throw new Error('Login Error', { cause: 'Sorry, account need to be actived' });
+      } else if (users.status === 2 || users.status === 3) {
         throw new Error('Login Error', { cause: 'Sorry, account terminated or temporarily blocked' });
       }
 
@@ -123,12 +125,37 @@ class LoginController extends Controller {
 
     } catch (error) {
       // console.log(error);
-      if (error.message === 'Login Error') {
-        ctx.status = 400;
-        returnMap = { error: error.cause };
-      } else {
-        ctx.status = 500;
-        returnMap = { error: 'Something went wrong. Please try again later.' };
+      const users = await this.ctx.service.userService.findUser(ctx.body);
+      console.log(users.app_user_id);
+      // const userVerifications = await this.ctx.service.userService.findUserVerification(users);
+      switch (error.cause) {
+        case 'Invalid username or password':
+          ctx.status = 400;
+          returnMap = { error: error.cause };
+          break;
+        case 'Sorry, account need to be actived':
+          ctx.status = 400;
+          {
+            // Generate New OTP & Server Ref
+            const OTP = generateVerificationCode(6);
+            const serverRef = uuid.v4();
+            console.log(serverRef);
+            const updateData = {
+              server_ref: serverRef,
+              code: OTP,
+            };
+            await this.ctx.service.userService.updateUserVerifications(users.app_user_id, updateData);
+            await this.ctx.service.emailService.sendOTP(serverRef);
+            returnMap = { error: 'OTP sent, Email verification required', server_ref: serverRef };
+          }
+          break;
+        case 'Sorry, account terminated or temporarily blocked':
+          returnMap = { error: error.cause };
+          break;
+        default:
+          ctx.status = 500;
+          returnMap = { error: 'Something went wrong. Please try again later.' };
+          break;
       }
     }
 

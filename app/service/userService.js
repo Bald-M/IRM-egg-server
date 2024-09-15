@@ -37,6 +37,24 @@ class UserService extends Service {
     const verification = await this.app.model.UserVerification.create(verificationData);
     return verification;
   }
+  async updateUserVerifications(app_user_id, updateData) {
+    console.log('-----------------updateUserVerifications-----------------');
+    // Generate the current timestamp and expiration time
+    const currentDate = new Date();
+    // After 5 minutes
+    const expirationDate = new Date(currentDate.getTime() + 5 * 60000);
+    // Check if a record with the given server_ref exists
+    const verification = await this.app.model.UserVerification.findOne({
+      where: { app_user_id: 11 },
+    });
+    if (!verification) {
+      throw new Error('Verification record not found');
+    }
+    updateData.expiration_date = expirationDate;
+    // Update the verification record with the provided updateData
+    const updatedVerification = await verification.update(updateData);
+    return updatedVerification;
+  }
   // Find User Method
   async findUser(user) {
     console.log('-----------------findUser-----------------');
@@ -50,6 +68,19 @@ class UserService extends Service {
     });
 
     return users;
+  }
+  // Find User Verification
+  async findUserVerification(user) {
+    console.log('-----------------findUserVerification-----------------');
+    console.log(user);
+    // Find user on database
+    const userVerifications = await this.app.model.UserVerification.findOne({
+      where: {
+        app_user_id: user.app_user_id,
+      },
+    });
+
+    return userVerifications;
   }
 }
 
