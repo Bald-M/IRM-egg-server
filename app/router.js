@@ -8,4 +8,8 @@ module.exports = app => {
   router.post('/api/registration', controller.login.register);
   // Login Interface Router
   router.post('/api/login', controller.login.login);
+  // Email Verification Router
+  router.post('/api/emailVerification', controller.login.emailVerification);
+  // Send OTP Router (In case OTP is expired)
+  router.post('/api/sendOTP', controller.login.sendOTP);
 };

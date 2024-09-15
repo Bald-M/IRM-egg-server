@@ -109,6 +109,7 @@ class LoginController extends Controller {
       const token = ctx.app.jwt.sign({
         id: users.app_user_id,
         email: users.email,
+        type: users.type,
       }, ctx.app.config.jwt.secret, {
         expiresIn: '1h',
       });
@@ -159,6 +160,121 @@ class LoginController extends Controller {
       }
     }
 
+    ctx.body = returnMap;
+  }
+  async emailVerification() {
+    const { ctx } = this;
+    ctx.body = ctx.request.body;
+    console.log(ctx.body);
+    const server_ref = ctx.body.server_ref;
+    const OTP = ctx.body.otp;
+
+    // Create a jason instance for parsing to frontend
+    let returnMap = {};
+    console.log(ctx.body);
+    try {
+      const userVerification = await this.app.model.UserVerification.findOne({
+        where: {
+          server_ref,
+        },
+      });
+      // console.log(server_ref);
+      // console.log(userVerification.server_ref);
+      // console.log(userVerification.server_ref === server_ref);
+
+      if (OTP === '' || server_ref === '') {
+        throw new Error('Email Verification Error', { cause: 'server_ref or OTP is empty' });
+      }
+      if (!userVerification) {
+        throw new Error('Email Verification Error', { cause: 'Invalid Server Ref. Please try again' });
+      }
+      if (userVerification.code !== OTP) {
+        throw new Error('Email Verification Error', { cause: 'Invalid OTP. Please try again' });
+      }
+
+      // Check if OTP is expired or not
+      const currentTime = new Date();
+      if (userVerification.expiration_date < currentTime) {
+        throw new Error('Email Verification Error', { cause: 'OTP expired' });
+      }
+
+      // If pass, update user verification & application user status
+      // status: 1 - Active
+      const updatedData = {
+        status: 1,
+        updated_date: new Date(),
+      };
+      await userVerification.update(updatedData);
+      // await this.ctx.service.userService.updateUserVerifications(userVerification.app_user_id, updatedData);
+      await this.ctx.service.userService.updateUser(userVerification.app_user_id, { status: 1 });
+      ctx.status = 200;
+      returnMap = { description: 'Email verification successful. Please Sign In' };
+    } catch (error) {
+      console.log(error);
+      switch (error.cause) {
+        case 'Invalid server_ref. Please try again':
+          ctx.status = 400;
+          returnMap = { error: error.cause };
+          break;
+        case 'Invalid OTP. Please try again':
+          ctx.status = 400;
+          returnMap = { error: error.cause };
+          break;
+        case 'OTP expired':
+          ctx.status = 400;
+          returnMap = { error: error.cause };
+          break;
+        default:
+          ctx.status = 500;
+          returnMap = { error: 'Internal Server Error' };
+          break;
+      }
+      ctx.status = 400;
+      returnMap = { error: error.cause };
+    }
+
+    ctx.body = returnMap;
+  }
+  // When user click on resend button, call this function
+  async sendOTP() {
+    const { ctx } = this;
+    ctx.body = ctx.request.body;
+    const server_ref = ctx.body.server_ref;
+    let returnMap = {};
+    try {
+      // F
+      const userVerifications = await this.app.model.UserVerification.findOne({
+        where: {
+          server_ref,
+        },
+      });
+
+      if (!userVerifications) {
+        ctx.status = 400;
+        returnMap = { error: 'Invalid Server Ref' };
+        ctx.body = returnMap;
+        return;
+      }
+
+      // Update OTP & Expiration
+      const OTP = generateVerificationCode(6);
+      const currentDate = new Date();
+      // After 5 minutes
+      const expirationDate = new Date(currentDate.getTime() + 5 * 60000);
+      const updateData = {
+        code: OTP,
+        expiration_date: expirationDate,
+      };
+      // await this.ctx.service.userService.updateUserVerifications(userVarifications.app_user_id, updateData);
+      await userVerifications.update(updateData);
+      await this.ctx.service.emailService.sendOTP(server_ref);
+      ctx.status = 200;
+      returnMap = { description: 'OTP Sent Successfully' };
+    } catch (error) {
+      console.log(error);
+      ctx.status = 400;
+      returnMap = { error: 'Email Sent Failure' };
+    }
     ctx.body = returnMap;
   }
 }

@@ -18,6 +18,7 @@ class EmailService extends Service {
     if (!user) {
       throw new Error('User not found');
     }
+
     // Setup email transporter
     const transporter = nodemailer.createTransport({
       service: mail.service, // Gmail

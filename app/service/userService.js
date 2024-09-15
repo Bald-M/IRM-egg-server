@@ -3,7 +3,7 @@ const { Service } = require('egg');
 class UserService extends Service {
   // Add User Method
   async addUser(user) {
-    console.log('-----------------addUser-----------------');
+    console.log('-----------------Add User-----------------');
     // console.log(user);
     // Mysql autogenerate date
     // user.registered_date = new Date();
@@ -14,6 +14,20 @@ class UserService extends Service {
     // const users = await this.app.model.User.create(user);
     const users = await this.app.model.ApplicationUser.create(user);
     return users;
+  }
+  async updateUser(app_user_id, updateData) {
+    console.log('-----------------Update User-----------------');
+    const users = await this.app.model.ApplicationUser.findOne({
+      where: {
+        app_user_id,
+      },
+    });
+    if (!users) {
+      throw new Error('User record not found');
+    }
+    // Update application user record with the provided updateData
+    const updatedUser = await users.update(updateData);
+    return updatedUser;
   }
   // Add User Verification Method
   async addVerification(app_user_id, server_ref, code, type) {
@@ -45,7 +59,7 @@ class UserService extends Service {
     const expirationDate = new Date(currentDate.getTime() + 5 * 60000);
     // Check if a record with the given server_ref exists
     const verification = await this.app.model.UserVerification.findOne({
-      where: { app_user_id: 11 },
+      where: { app_user_id },
     });
     if (!verification) {
       throw new Error('Verification record not found');
@@ -56,6 +70,7 @@ class UserService extends Service {
     return updatedVerification;
   }
   // Find User Method
+  // Valid email and password
   async findUser(user) {
     console.log('-----------------findUser-----------------');
     console.log(user);
@@ -70,18 +85,18 @@ class UserService extends Service {
     return users;
   }
   // Find User Verification
-  async findUserVerification(user) {
-    console.log('-----------------findUserVerification-----------------');
-    console.log(user);
-    // Find user on database
-    const userVerifications = await this.app.model.UserVerification.findOne({
-      where: {
-        app_user_id: user.app_user_id,
-      },
-    });
+  // async findUserVerification(user) {
+  //   console.log('-----------------findUserVerification-----------------');
+  //   console.log(user);
+  //   // Find user on database
+  //   const userVerifications = await this.app.model.UserVerification.findOne({
+  //     where: {
+  //       app_user_id: user.app_user_id,
+  //     },
+  //   });
 
-    return userVerifications;
-  }
+  //   return userVerifications;
+  // }
 }
 
 module.exports = UserService;
