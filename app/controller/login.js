@@ -111,7 +111,9 @@ class LoginController extends Controller {
         email: users.email,
         type: users.type,
       }, ctx.app.config.jwt.secret, {
-        expiresIn: '1h',
+        // 30 = 30 sec
+        // 1h = 1 hour
+        expiresIn: '30',
       });
       ctx.status = 200;
       returnMap = {
@@ -127,7 +129,6 @@ class LoginController extends Controller {
     } catch (error) {
       // console.log(error);
       const users = await this.ctx.service.userService.findUser(ctx.body);
-      console.log(users.app_user_id);
       // const userVerifications = await this.ctx.service.userService.findUserVerification(users);
       switch (error.cause) {
         case 'Invalid username or password':
