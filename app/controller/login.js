@@ -243,7 +243,6 @@ class LoginController extends Controller {
     const server_ref = ctx.body.server_ref;
     let returnMap = {};
     try {
-      // F
       const userVerifications = await this.app.model.UserVerification.findOne({
         where: {
           server_ref,
@@ -275,6 +274,51 @@ class LoginController extends Controller {
       console.log(error);
       ctx.status = 400;
       returnMap = { error: 'Email Sent Failure' };
+    }
+    ctx.body = returnMap;
+  }
+  async forgotPasswordRequest() {
+    const { ctx } = this;
+    ctx.body = ctx.request.body;
+    const email = ctx.body.email;
+    let returnMap = {};
+    try {
+      const users = await this.app.model.ApplicationUser.findOne({
+        where: {
+          email,
+        },
+      });
+
+      if (!users) {
+        ctx.status = 400;
+        returnMap = { error: 'Email is not registered' };
+        ctx.body = returnMap;
+        return;
+      }
+
+      const userVerifications = await this.app.model.UserVerification.findOne({
+        where: {
+          app_user_id: users.app_user_id,
+        },
+      });
+
+      // Update OTP & Expiration
+      const OTP = generateVerificationCode(6);
+      const currentDate = new Date();
+      // After 5 minutes
+      const expirationDate = new Date(currentDate.getTime() + 5 * 60000);
+      const updateData = {
+        code: OTP,
+        expiration_date: expirationDate,
+      };
+      await userVerifications.update(updateData);
+      await this.ctx.service.emailService.sendOTP(userVerifications.server_ref);
+      ctx.status = 200;
+      returnMap = { server_ref: userVerifications.server_ref, description: 'Password reset OTP sent' };
+    } catch (error) {
+      console.log(error);
+      ctx.status = 400;
+      returnMap = { error };
     }
     ctx.body = returnMap;
   }

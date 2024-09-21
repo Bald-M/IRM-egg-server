@@ -12,4 +12,6 @@ module.exports = app => {
   router.post('/api/emailVerification', controller.login.emailVerification);
   // Send OTP Router (In case OTP is expired)
   router.post('/api/sendOTP', controller.login.sendOTP);
+  // Forgot Password Request Router
+  router.post('/api/forgotPassRequest', controller.login.forgotPasswordRequest);
 };
