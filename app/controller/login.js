@@ -261,6 +261,7 @@ class LoginController extends Controller {
       const currentDate = new Date();
       // After 5 minutes
       const expirationDate = new Date(currentDate.getTime() + 5 * 60000);
+      // update server ref as well
       const updateData = {
         code: OTP,
         expiration_date: expirationDate,
@@ -307,6 +308,7 @@ class LoginController extends Controller {
       const currentDate = new Date();
       // After 5 minutes
       const expirationDate = new Date(currentDate.getTime() + 5 * 60000);
+      // update server ref as well
       const updateData = {
         code: OTP,
         expiration_date: expirationDate,
@@ -322,109 +324,146 @@ class LoginController extends Controller {
     }
     ctx.body = returnMap;
   }
+  async forgotPasswordVerify() {
+    const { ctx } = this;
+
+    ctx.body = ctx.request.body;
+    console.log(ctx.body);
+    const server_ref = ctx.body.server_ref;
+    const otp = ctx.body.otp;
+    const email = ctx.body.email;
+    let returnMap = {};
+
+    try {
+      const userVerifications = await this.app.model.UserVerification.findOne({
+        where: {
+          server_ref,
+        },
+      });
+
+      if (!userVerifications) {
+        return;
+      }
+
+      if (otp === '' || server_ref === '' || email === '') {
+        throw new Error('Forgot Password Verification Error', { cause: 'server_ref, email or OTP is empty' });
+      }
+
+      // Check if OTP is expired or not
+      const currentTime = new Date();
+      if (userVerifications.expiration_date < currentTime) {
+        throw new Error('Forgot Password Verification Error', { cause: 'OTP expired' });
+      }
+
+      if (otp === userVerifications.code) {
+        ctx.body = 200;
+        returnMap = { description: 'OTP Matched' };
+      } else {
+        throw new Error('Forgot Password Verification Error', { cause: 'Invalid OTP. Please try again' });
+      }
+    } catch (error) {
+      console.log(error);
+      switch (error.cause) {
+        case 'server_ref, email or OTP is empty':
+          ctx.status = 400;
+          returnMap = { error: error.cause };
+          break;
+        case 'Invalid OTP. Please try again':
+          ctx.status = 400;
+          returnMap = { error: error.cause };
+          break;
+        case 'OTP expired':
+          ctx.status = 400;
+          returnMap = { error: error.cause };
+          break;
+        default:
+          ctx.status = 500;
+          returnMap = { error: 'Internal Server Error' };
+          break;
+      }
+    }
+
+    ctx.body = returnMap;
+  }
+  async forgotPasswordChange() {
+    const { ctx } = this;
+    ctx.body = ctx.request.body;
+    console.log(ctx.body);
+    let returnMap = {};
+    const email = ctx.body.email;
+    const otp = ctx.body.otp;
+    const server_ref = ctx.body.server_ref;
+    const password = ctx.body.password;
+    try {
+
+      if (email === '' || password === '' || server_ref === '' || otp === '') {
+        throw new Error('Forgot Password Verification Error', { cause: 'server_ref, email or OTP is empty' });
+      }
+
+      const passwordError = validatePassword(password);
+      if (!passwordError) {
+        throw new Error('Password Validation Error', { cause: 'Password must include uppercase, lowercase letters, and numbers and must be at least 8 digits' });
+      }
+
+      const users = await this.app.model.ApplicationUser.findOne({
+        where: {
+          email,
+        },
+      });
+
+      if (!users) {
+        return;
+      }
+
+      const userVerifications = await this.app.model.UserVerification.findOne({
+        where: {
+          server_ref,
+        },
+      });
+
+      if (!userVerifications) {
+        return;
+      }
+
+      // Check if OTP is expired or not
+      const currentTime = new Date();
+      if (userVerifications.expiration_date < currentTime) {
+        throw new Error('Forgot Password Verification Error', { cause: 'OTP expired' });
+      }
+
+      if (otp !== userVerifications.code) {
+        throw new Error('Forgot Password Verification Error', { error: 'Invalid OTP. Please try again' });
+      }
+
+      // Update Password
+      const updateData = {
+        password,
+      };
+
+      await users.update(updateData);
+      ctx.status = 200;
+      returnMap = { description: 'Password changing successful. Please Sign In' };
+
+    } catch (error) {
+      console.log(error);
+      switch (error.cause) {
+        case 'server_ref, email or OTP is empty':
+          ctx.status = 400;
+          returnMap = { error: error.cause };
+          break;
+        case 'Invalid OTP. Please try again':
+          ctx.status = 400;
+          returnMap = { error: error.cause };
+          break;
+        default:
+          ctx.status = 500;
+          returnMap = { error: 'Internal Server Error' };
+          break;
+      }
+    }
+    ctx.body = returnMap;
+  }
 }
 
 module.exports = LoginController;
 
-// ctx.body
-// {
-//   email: 'jasonxd@qq.com',
-//   password: '12345678Abc',
-//   type: 'student',
-//   username: 'jasonxd'
-// }
-
-// Error
-// SequelizeUniqueConstraintError
-// Duplicate entry 'jasonxd@qq.com' for key 'application_user.email'
-// "error": {
-//         "name": "SequelizeUniqueConstraintError",
-//         "errors": [
-//             {
-//                 "message": "email must be unique",
-//                 "type": "unique violation",
-//                 "path": "email",
-//                 "value": "jasonxd@qq.com",
-//                 "origin": "DB",
-//                 "instance": {
-//                     "app_user_id": null,
-//                     "email": "jasonxd@qq.com",
-//                     "password": "12345678Abc",
-//                     "type": "student",
-//                     "username": "jasonxd"
-//                 },
-//                 "validatorKey": "not_unique",
-//                 "validatorName": null,
-//                 "validatorArgs": []
-//             }
-//         ],
-//         "parent": {
-//             "code": "ER_DUP_ENTRY",
-//             "errno": 1062,
-//             "sqlState": "23000",
-//             "sqlMessage": "Duplicate entry 'jasonxd@qq.com' for key 'application_user.email'",
-//             "sql": "INSERT INTO `application_user` (`app_user_id`,`username`,`email`,`password`,`type`) VALUES (DEFAULT,?,?,?,?);",
-//             "parameters": [
-//                 "jasonxd",
-//                 "jasonxd@qq.com",
-//                 "12345678Abc",
-//                 "student"
-//             ]
-//         },
-//         "original": {
-//             "code": "ER_DUP_ENTRY",
-//             "errno": 1062,
-//             "sqlState": "23000",
-//             "sqlMessage": "Duplicate entry 'jasonxd@qq.com' for key 'application_user.email'",
-//             "sql": "INSERT INTO `application_user` (`app_user_id`,`username`,`email`,`password`,`type`) VALUES (DEFAULT,?,?,?,?);",
-//             "parameters": [
-//                 "jasonxd",
-//                 "jasonxd@qq.com",
-//                 "12345678Abc",
-//                 "student"
-//             ]
-//         },
-//         "fields": {
-//             "email": "jasonxd@qq.com"
-//         },
-//         "sql": "INSERT INTO `application_user` (`app_user_id`,`username`,`email`,`password`,`type`) VALUES (DEFAULT,?,?,?,?);"
-//     }
-
-// SequelizeDatabaseError
-// enum ('Student', 'Client', 'IRM User', 'Admin'), when user input users
-// "error": {
-//         "name": "SequelizeDatabaseError",
-//         "parent": {
-//             "code": "WARN_DATA_TRUNCATED",
-//             "errno": 1265,
-//             "sqlState": "01000",
-//             "sqlMessage": "Data truncated for column 'type' at row 1",
-//             "sql": "INSERT INTO `application_user` (`app_user_id`,`username`,`email`,`password`,`type`) VALUES (DEFAULT,?,?,?,?);",
-//             "parameters": [
-//                 "jasonxd",
-//                 "jasonxd@qqs.com",
-//                 "12345678Abc",
-//                 "students"
-//             ]
-//         },
-//         "original": {
-//             "code": "WARN_DATA_TRUNCATED",
-//             "errno": 1265,
-//             "sqlState": "01000",
-//             "sqlMessage": "Data truncated for column 'type' at row 1",
-//             "sql": "INSERT INTO `application_user` (`app_user_id`,`username`,`email`,`password`,`type`) VALUES (DEFAULT,?,?,?,?);",
-//             "parameters": [
-//                 "jasonxd",
-//                 "jasonxd@qqs.com",
-//                 "12345678Abc",
-//                 "students"
-//             ]
-//         },
-//         "sql": "INSERT INTO `application_user` (`app_user_id`,`username`,`email`,`password`,`type`) VALUES (DEFAULT,?,?,?,?);",
-//         "parameters": [
-//             "jasonxd",
-//             "jasonxd@qqs.com",
-//             "12345678Abc",
-//             "students"
-//         ]
-//     }

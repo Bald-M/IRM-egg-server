@@ -14,4 +14,8 @@ module.exports = app => {
   router.post('/api/sendOTP', controller.login.sendOTP);
   // Forgot Password Request Router
   router.post('/api/forgotPassRequest', controller.login.forgotPasswordRequest);
+  // Forgot Password Verification Router
+  router.post('/api/forgotPassVerify', controller.login.forgotPasswordVerify);
+  // Reset Password Router
+  router.post('/api/forgotPassChange', controller.login.forgotPasswordChange);
 };
