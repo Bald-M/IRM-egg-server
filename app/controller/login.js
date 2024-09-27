@@ -345,7 +345,11 @@ class LoginController extends Controller {
         throw new Error('Forgot Password Verification Error', { cause: 'Email is not registered' });
       }
 
-      const userVerifications = await this.ctx.service.userService.findUserVerification(ctx.body);
+      const userVerifications = await this.app.model.UserVerification.findOne({
+        where: {
+          app_user_id: users.app_user_id,
+        },
+      });
 
       // Update OTP & Expiration
       const OTP = generateVerificationCode(6);
@@ -463,24 +467,24 @@ class LoginController extends Controller {
         throw new Error('Forgot Password Verification Error', { cause: 'Password must include uppercase, lowercase letters, and numbers and must be at least 8 digits' });
       }
 
-      // const users = await this.app.model.ApplicationUser.findOne({
-      //   where: {
-      //     email,
-      //   },
-      // });
-      const users = await this.ctx.service.userService.findUser(ctx.body);
+      const users = await this.app.model.ApplicationUser.findOne({
+        where: {
+          email,
+        },
+      });
 
+      console.log(users);
       if (!users) {
         return;
       }
 
-      // const userVerifications = await this.app.model.UserVerification.findOne({
-      //   where: {
-      //     server_ref,
-      //   },
-      // });
-      const userVerifications = await this.ctx.service.userService.findUser(ctx.body);
+      const userVerifications = await this.app.model.UserVerification.findOne({
+        where: {
+          server_ref,
+        },
+      });
 
+      console.log(userVerifications);
       if (!userVerifications) {
         throw new Error('Forgot Password Verification Error', { cause: 'Invalid server_ref. Please try again' });
       }
