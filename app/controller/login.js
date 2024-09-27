@@ -8,72 +8,109 @@ const uuid = require('uuid');
 
 class LoginController extends Controller {
   // Registration
+  // Email Length <= 80
   async register() {
     const { ctx } = this;
     // Get parameters from frontend
     ctx.body = ctx.request.body;
     ctx.body.type = ctx.body.type.toLowerCase();
+    const email = ctx.body.email;
+    const password = ctx.body.password;
+    const type = ctx.body.type;
     console.log(ctx.body);
     let returnMap = {};
-    // Validate Email
-    const emailError = validateEmail(ctx.body.email);
-    // When frontend post non email type
-    if (!emailError) {
-      ctx.status = 400;
-      returnMap = { error: 'Invalid email address' };
-      ctx.body = returnMap;
-      return;
-    }
-    // Ensure that students do not mistakenly select "industry" as their type
-    if (!ctx.body.email.endsWith('@student.wintec.ac.nz') && ctx.body.type === 'student') {
-      ctx.status = 400;
-      returnMap = { error: 'The type selected is student, but your email is not associated with Wintec students. Please check that you have selected the correct type.' };
-      ctx.body = returnMap;
-      return;
-    } else if (ctx.body.email.endsWith('@student.wintec.ac.nz') && ctx.body.type !== 'student') {
-      ctx.status = 400;
-      returnMap = { error: 'The type selected is industry, but your email is associated with Wintec students. Please check that you have selected the correct type.' };
-      ctx.body = returnMap;
-      return;
-    }
-    // Validate Password
-    // If password doesn not meet the requirement
-    // Lowercase + Uppercase letters + numbers, min 8 digits
-    const passwordError = validatePassword(ctx.body.password);
-    if (!passwordError) {
-      ctx.status = 400;
-      returnMap = { error: 'Password must include uppercase, lowercase letters, and numbers and must be at least 8 digits' };
-      ctx.body = returnMap;
-      return;
-    }
-    // serverRef: ebafbe85-1ac8-465f-be84-71414fb66d04
-    const serverRef = uuid.v4();
+
+    const server_ref = uuid.v4();
     try {
-      // Call addUser method from userService
+      // When email, password or type is empty string
+      if (email === '' || password === '' || type === '') {
+        throw new Error('Registration Verification Error', { cause: 'Email, Password or User role is empty' });
+      }
+
+      if (email.length > 80) {
+        throw new Error('Registration Verification Error', { cause: 'Your email address length is not legal' });
+      }
+
+      // When frontend post non email type
+      const emailError = validateEmail(email);
+      if (!emailError) {
+        throw new Error('Registration Verification Error', { cause: 'Invalid email address' });
+      }
+
+      // Ensure that students do not mistakenly select "industry" as their type
+      if (!email.endsWith('@student.wintec.ac.nz') && type === 'student') {
+        throw new Error('Registration Verification Error', { cause: 'The type selected is student, but your email is not associated with Wintec students. Please check that you have selected the correct type' });
+      } else if (ctx.body.email.endsWith('@student.wintec.ac.nz') && ctx.body.type !== 'student') {
+        throw new Error('Registration Verification Error', { cause: 'The type selected is industry, but your email is associated with Wintec students. Please check that you have selected the correct type' });
+      }
+
+      // If password doesn not meet the requirement
+      // Lowercase + Uppercase letters + numbers, min 8 digits
+      const passwordError = validatePassword(ctx.body.password);
+      if (!passwordError) {
+        throw new Error('Registration Verification Error', { error: 'Password must include uppercase, lowercase letters, and numbers and must be at least 8 digits' });
+      }
+
       // Call addUser method from userService
       const users = await this.ctx.service.userService.addUser(ctx.body);
 
       // Generate verification code / OTP
       const OTP = generateVerificationCode(6);
-      await this.ctx.service.userService.addVerification(users.app_user_id, serverRef, OTP);
-      await this.ctx.service.emailService.sendOTP(serverRef);
+      const userVerification = {
+        app_user_id: users.app_user_id,
+        server_ref,
+        code: OTP,
+      };
+      await this.ctx.service.userService.addUserVerification(userVerification);
+      await this.ctx.service.emailService.sendOTP(server_ref);
       ctx.status = 200;
-      returnMap = { server_ref: serverRef, description: 'Registration successful and OTP sent' };
+      returnMap = { server_ref, description: 'Registration successful and OTP sent' };
     } catch (error) {
       console.log(error);
 
-      // 409 Email already registered, Please use another email or Sign In
       if (error.name === 'SequelizeUniqueConstraintError') {
-        ctx.status = 400;
+        ctx.status = 409;
         returnMap = { error: 'Email already registered, Please use another email or Sign In' };
-      } else if (error.name === 'SequelizeDatabaseError') {
-        ctx.status = 400;
-        returnMap = { error: 'Data truncated for column \'type\'' };
-      } else {
+      } else if (error.name === 'SequelizeConnectionError') {
         ctx.status = 500;
-        returnMap = { error: 'Internal Server Error' };
+        returnMap = { error: 'Something went wrong. Please try again later' };
       }
-      // returnMap = { code: 409, msg: error.original.sqlMessage };
+
+      switch (error.cause) {
+        case 'Email, Password or User role is empty':
+          ctx.status = 400;
+          returnMap = { error: error.cause };
+          break;
+        case 'Invalid email address':
+          ctx.status = 404;
+          returnMap = { error: error.cause };
+          break;
+        case 'Your email address length is not legal':
+          ctx.status = 403;
+          returnMap = { error: error.cause };
+          break;
+        case 'The type selected is student, but your email is not associated with Wintec students. Please check that you have selected the correct type':
+          ctx.status = 403;
+          returnMap = { error: error.cause };
+          break;
+        case 'The type selected is industry, but your email is associated with Wintec students. Please check that you have selected the correct type':
+          ctx.status = 403;
+          returnMap = { error: error.cause };
+          break;
+        case 'Password must include uppercase, lowercase letters, and numbers and must be at least 8 digits':
+          ctx.status = 403;
+          returnMap = { error: error.cause };
+          break;
+        default:
+          ctx.status = 500;
+          returnMap = { error: 'Something went wrong. Please try again later' };
+          break;
+      }
+
+      // else if (error.name === 'SequelizeDatabaseError') {
+      //   ctx.status = 400;
+      //   returnMap = { error: 'Data truncated for column \'type\'' };
+      // }
     }
     ctx.body = returnMap;
   }
@@ -81,29 +118,29 @@ class LoginController extends Controller {
     const { ctx } = this;
     ctx.body = ctx.request.body;
     // Create a jason instance for parsing to frontend
+    const email = ctx.body.email;
+    const password = ctx.body.password;
     let returnMap = {};
     console.log(ctx.body);
-    // Email Validation
-    if (ctx.body.password === '' || ctx.body.email === '') {
-      ctx.status = 400;
-      returnMap = { error: 'Please provide email or password' };
-      ctx.body = returnMap;
-      return;
-    }
+
 
     try {
+      if (password === '' || email === '') {
+        throw new Error('Login Verification Error', { cause: 'Please provide email or password' });
+      }
+
       const users = await this.ctx.service.userService.findUser(ctx.body);
       console.log(users);
 
       if (users === null) {
-        throw new Error('Login Error', { cause: 'Invalid username or password' });
+        throw new Error('Login Verification Error', { cause: 'Invalid username or password' });
       }
 
       // Check if the user is blocked, removed or pending
       if (users.status === 0) {
-        throw new Error('Login Error', { cause: 'Sorry, account need to be actived' });
+        throw new Error('Login Verification Error', { cause: 'Sorry, account need to be actived' });
       } else if (users.status === 2 || users.status === 3) {
-        throw new Error('Login Error', { cause: 'Sorry, account terminated or temporarily blocked' });
+        throw new Error('Login Verification Error', { cause: 'Sorry, account terminated or temporarily blocked' });
       }
 
       const token = ctx.app.jwt.sign({
@@ -113,7 +150,7 @@ class LoginController extends Controller {
       }, ctx.app.config.jwt.secret, {
         // 30 = 30 sec
         // 1h = 1 hour
-        expiresIn: '30',
+        expiresIn: '1h',
       });
       ctx.status = 200;
       returnMap = {
@@ -127,17 +164,26 @@ class LoginController extends Controller {
       };
 
     } catch (error) {
-      // console.log(error);
-      const users = await this.ctx.service.userService.findUser(ctx.body);
-      // const userVerifications = await this.ctx.service.userService.findUserVerification(users);
+      console.log(error);
+
+      if (error.name === 'SequelizeConnectionError') {
+        ctx.status = 500;
+        returnMap = { error: 'Something went wrong. Please try again later' };
+      }
+
       switch (error.cause) {
-        case 'Invalid username or password':
+        case 'Please provide email or password':
           ctx.status = 400;
           returnMap = { error: error.cause };
           break;
+        case 'Invalid username or password':
+          ctx.status = 401;
+          returnMap = { error: error.cause };
+          break;
         case 'Sorry, account need to be actived':
-          ctx.status = 400;
+          ctx.status = 403;
           {
+            const users = await this.ctx.service.userService.findUser(ctx.body);
             // Generate New OTP & Server Ref
             const OTP = generateVerificationCode(6);
             const serverRef = uuid.v4();
@@ -152,15 +198,15 @@ class LoginController extends Controller {
           }
           break;
         case 'Sorry, account terminated or temporarily blocked':
+          ctx.status = 401;
           returnMap = { error: error.cause };
           break;
         default:
           ctx.status = 500;
-          returnMap = { error: 'Something went wrong. Please try again later.' };
+          returnMap = { error: 'Something went wrong. Please try again later' };
           break;
       }
     }
-
     ctx.body = returnMap;
   }
   async emailVerification() {
@@ -174,28 +220,22 @@ class LoginController extends Controller {
     let returnMap = {};
     console.log(ctx.body);
     try {
-      const userVerification = await this.app.model.UserVerification.findOne({
-        where: {
-          server_ref,
-        },
-      });
-      // console.log(server_ref);
-      // console.log(userVerification.server_ref);
-      // console.log(userVerification.server_ref === server_ref);
+      const userVerifications = await this.ctx.service.userService.findUserVerification(ctx.body);
+      console.log(userVerifications);
 
       if (OTP === '' || server_ref === '') {
         throw new Error('Email Verification Error', { cause: 'server_ref or OTP is empty' });
       }
-      if (!userVerification) {
+      if (!userVerifications) {
         throw new Error('Email Verification Error', { cause: 'Invalid Server Ref. Please try again' });
       }
-      if (userVerification.code !== OTP) {
+      if (userVerifications.code !== OTP) {
         throw new Error('Email Verification Error', { cause: 'Invalid OTP. Please try again' });
       }
 
       // Check if OTP is expired or not
       const currentTime = new Date();
-      if (userVerification.expiration_date < currentTime) {
+      if (userVerifications.expiration_date < currentTime) {
         throw new Error('Email Verification Error', { cause: 'OTP expired' });
       }
 
@@ -205,33 +245,40 @@ class LoginController extends Controller {
         status: 1,
         updated_date: new Date(),
       };
-      await userVerification.update(updatedData);
-      // await this.ctx.service.userService.updateUserVerifications(userVerification.app_user_id, updatedData);
-      await this.ctx.service.userService.updateUser(userVerification.app_user_id, { status: 1 });
+      await userVerifications.update(updatedData);
+      await this.ctx.service.userService.updateUser(userVerifications.app_user_id, { status: 1 });
       ctx.status = 200;
       returnMap = { description: 'Email verification successful. Please Sign In' };
     } catch (error) {
       console.log(error);
+
+      if (error.name === 'SequelizeConnectionError') {
+        ctx.status = 500;
+        returnMap = { error: 'Something went wrong. Please try again later' };
+      }
+
       switch (error.cause) {
-        case 'Invalid server_ref. Please try again':
+        case 'server_ref or OTP is empty':
           ctx.status = 400;
+          returnMap = { error: error.cause };
+          break;
+        case 'Invalid server_ref. Please try again':
+          ctx.status = 401;
           returnMap = { error: error.cause };
           break;
         case 'Invalid OTP. Please try again':
-          ctx.status = 400;
+          ctx.status = 401;
           returnMap = { error: error.cause };
           break;
-        case 'OTP expired':
-          ctx.status = 400;
+        case 'Invalid OTP. OTP has expired':
+          ctx.status = 410;
           returnMap = { error: error.cause };
           break;
         default:
           ctx.status = 500;
-          returnMap = { error: 'Internal Server Error' };
+          returnMap = { error: 'Something went wrong. Please try again later' };
           break;
       }
-      ctx.status = 400;
-      returnMap = { error: error.cause };
     }
 
     ctx.body = returnMap;
@@ -243,65 +290,62 @@ class LoginController extends Controller {
     const server_ref = ctx.body.server_ref;
     let returnMap = {};
     try {
-      const userVerifications = await this.app.model.UserVerification.findOne({
-        where: {
-          server_ref,
-        },
-      });
+      const userVerifications = await this.ctx.service.userService.findUserVerification(ctx.body);
+      // console.log(ctx.body);
+      console.log(userVerifications);
 
       if (!userVerifications) {
-        ctx.status = 400;
-        returnMap = { error: 'Invalid Server Ref' };
-        ctx.body = returnMap;
-        return;
+        throw new Error('Send OTP Error', { cause: 'Invalid Server Ref' });
       }
 
       // Update OTP & Expiration
       const OTP = generateVerificationCode(6);
       const currentDate = new Date();
-      // After 5 minutes
-      const expirationDate = new Date(currentDate.getTime() + 5 * 60000);
+      // After 30 minutes
+      const expirationDate = new Date(currentDate.getTime() + 30 * 60000);
       // update server ref as well
       const updateData = {
         code: OTP,
         expiration_date: expirationDate,
       };
-      // await this.ctx.service.userService.updateUserVerifications(userVarifications.app_user_id, updateData);
       await userVerifications.update(updateData);
       await this.ctx.service.emailService.sendOTP(server_ref);
       ctx.status = 200;
       returnMap = { description: 'OTP Sent Successfully' };
     } catch (error) {
       console.log(error);
-      ctx.status = 400;
-      returnMap = { error: 'Email Sent Failure' };
+
+      if (error.name === 'SequelizeConnectionError') {
+        ctx.status = 500;
+        returnMap = { error: 'Something went wrong. Please try again later' };
+      }
+
+      switch (error.cause) {
+        case 'Invalid Server Ref':
+          ctx.status = 401;
+          returnMap = { error: error.cause };
+          break;
+        default:
+          ctx.status = 500;
+          returnMap = { error: 'Something went wrong. Please try again later' };
+          break;
+      }
     }
     ctx.body = returnMap;
   }
   async forgotPasswordRequest() {
     const { ctx } = this;
     ctx.body = ctx.request.body;
-    const email = ctx.body.email;
+    // const email = ctx.body.email;
     let returnMap = {};
     try {
-      const users = await this.app.model.ApplicationUser.findOne({
-        where: {
-          email,
-        },
-      });
+      const users = await this.ctx.service.userService.findUser(ctx.body);
 
       if (!users) {
-        ctx.status = 400;
-        returnMap = { error: 'Email is not registered' };
-        ctx.body = returnMap;
-        return;
+        throw new Error('Forgot Password Verification Error', { cause: 'Email is not registered' });
       }
 
-      const userVerifications = await this.app.model.UserVerification.findOne({
-        where: {
-          app_user_id: users.app_user_id,
-        },
-      });
+      const userVerifications = await this.ctx.service.userService.findUserVerification(ctx.body);
 
       // Update OTP & Expiration
       const OTP = generateVerificationCode(6);
@@ -319,8 +363,22 @@ class LoginController extends Controller {
       returnMap = { server_ref: userVerifications.server_ref, description: 'Password reset OTP sent' };
     } catch (error) {
       console.log(error);
-      ctx.status = 400;
-      returnMap = { error };
+
+      if (error.name === 'SequelizeConnectionError') {
+        ctx.status = 500;
+        returnMap = { error: 'Something went wrong. Please try again later' };
+      }
+      switch (error.cause) {
+        case 'Email is not registered':
+          ctx.status = 404;
+          returnMap = { error: error.cause };
+          break;
+        default:
+          ctx.status = 500;
+          returnMap = { error: 'Something went wrong. Please try again later' };
+          break;
+      }
+
     }
     ctx.body = returnMap;
   }
@@ -335,11 +393,7 @@ class LoginController extends Controller {
     let returnMap = {};
 
     try {
-      const userVerifications = await this.app.model.UserVerification.findOne({
-        where: {
-          server_ref,
-        },
-      });
+      const userVerifications = await this.ctx.service.userService.findUserVerification(ctx.body);
 
       if (!userVerifications) {
         return;
@@ -352,7 +406,7 @@ class LoginController extends Controller {
       // Check if OTP is expired or not
       const currentTime = new Date();
       if (userVerifications.expiration_date < currentTime) {
-        throw new Error('Forgot Password Verification Error', { cause: 'OTP expired' });
+        throw new Error('Forgot Password Verification Error', { cause: 'Invalid OTP. OTP has expired' });
       }
 
       if (otp === userVerifications.code) {
@@ -363,22 +417,26 @@ class LoginController extends Controller {
       }
     } catch (error) {
       console.log(error);
+      if (error.name === 'SequelizeConnectionError') {
+        ctx.status = 500;
+        returnMap = { error: 'Something went wrong. Please try again later' };
+      }
       switch (error.cause) {
         case 'server_ref, email or OTP is empty':
           ctx.status = 400;
           returnMap = { error: error.cause };
           break;
         case 'Invalid OTP. Please try again':
-          ctx.status = 400;
+          ctx.status = 401;
           returnMap = { error: error.cause };
           break;
-        case 'OTP expired':
-          ctx.status = 400;
+        case 'Invalid OTP. OTP has expired':
+          ctx.status = 410;
           returnMap = { error: error.cause };
           break;
         default:
           ctx.status = 500;
-          returnMap = { error: 'Internal Server Error' };
+          returnMap = { error: 'Something went wrong. Please try again later' };
           break;
       }
     }
@@ -402,33 +460,35 @@ class LoginController extends Controller {
 
       const passwordError = validatePassword(password);
       if (!passwordError) {
-        throw new Error('Password Validation Error', { cause: 'Password must include uppercase, lowercase letters, and numbers and must be at least 8 digits' });
+        throw new Error('Forgot Password Verification Error', { cause: 'Password must include uppercase, lowercase letters, and numbers and must be at least 8 digits' });
       }
 
-      const users = await this.app.model.ApplicationUser.findOne({
-        where: {
-          email,
-        },
-      });
+      // const users = await this.app.model.ApplicationUser.findOne({
+      //   where: {
+      //     email,
+      //   },
+      // });
+      const users = await this.ctx.service.userService.findUser(ctx.body);
 
       if (!users) {
         return;
       }
 
-      const userVerifications = await this.app.model.UserVerification.findOne({
-        where: {
-          server_ref,
-        },
-      });
+      // const userVerifications = await this.app.model.UserVerification.findOne({
+      //   where: {
+      //     server_ref,
+      //   },
+      // });
+      const userVerifications = await this.ctx.service.userService.findUser(ctx.body);
 
       if (!userVerifications) {
-        return;
+        throw new Error('Forgot Password Verification Error', { cause: 'Invalid server_ref. Please try again' });
       }
 
       // Check if OTP is expired or not
       const currentTime = new Date();
       if (userVerifications.expiration_date < currentTime) {
-        throw new Error('Forgot Password Verification Error', { cause: 'OTP expired' });
+        throw new Error('Forgot Password Verification Error', { cause: 'Invalid OTP. OTP has expired' });
       }
 
       if (otp !== userVerifications.code) {
@@ -446,18 +506,34 @@ class LoginController extends Controller {
 
     } catch (error) {
       console.log(error);
+      if (error.name === 'SequelizeConnectionError') {
+        ctx.status = 500;
+        returnMap = { error: 'Something went wrong. Please try again later' };
+      }
       switch (error.cause) {
         case 'server_ref, email or OTP is empty':
           ctx.status = 400;
           returnMap = { error: error.cause };
           break;
+        case 'Password must include uppercase, lowercase letters, and numbers and must be at least 8 digits':
+          ctx.status = 403;
+          returnMap = { error: error.cause };
+          break;
+        case 'Invalid server_ref. Please try again':
+          ctx.status = 401;
+          returnMap = { error: error.cause };
+          break;
+        case 'Invalid OTP. OTP has expired':
+          ctx.status = 410;
+          returnMap = { error: error.cause };
+          break;
         case 'Invalid OTP. Please try again':
-          ctx.status = 400;
+          ctx.status = 401;
           returnMap = { error: error.cause };
           break;
         default:
           ctx.status = 500;
-          returnMap = { error: 'Internal Server Error' };
+          returnMap = { error: 'Something went wrong. Please try again later' };
           break;
       }
     }

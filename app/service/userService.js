@@ -30,26 +30,18 @@ class UserService extends Service {
     return updatedUser;
   }
   // Add User Verification Method
-  async addVerification(app_user_id, server_ref, code, type) {
+  async addUserVerification(userVerification) {
     console.log('-----------------addUserVerification-----------------');
 
     // Generate the current timestamp and expiration time
     const currentDate = new Date();
-    // After 5 minutes
-    const expirationDate = new Date(currentDate.getTime() + 5 * 60000);
+    // After 30 minutes
+    const expirationDate = new Date(currentDate.getTime() + 30 * 60000);
 
-    // Construct verification record
-    const verificationData = {
-      app_user_id,
-      server_ref,
-      code,
-      type,
-      expiration_date: expirationDate,
-    };
-
+    userVerification.expiration_date = expirationDate;
     // Insert verification data into the User Verification table
-    const verification = await this.app.model.UserVerification.create(verificationData);
-    return verification;
+    const userVerifications = await this.app.model.UserVerification.create(userVerification);
+    return userVerifications;
   }
   async updateUserVerifications(app_user_id, updateData) {
     console.log('-----------------updateUserVerifications-----------------');
@@ -74,29 +66,80 @@ class UserService extends Service {
   async findUser(user) {
     console.log('-----------------findUser-----------------');
     console.log(user);
-    // Find user on database
+
+    // Initialize an empty object for the 'where' clause
+    const whereClause = {};
+
+    // Dynamically add fields to the 'where' clause if they are present in the input
+    if (user.id) {
+      whereClause.app_user_id = user.id;
+    }
+    if (user.username) {
+      whereClause.username = user.username;
+    }
+    if (user.email) {
+      whereClause.email = user.email;
+    }
+    if (user.password) {
+      whereClause.password = user.password;
+    }
+    if (user.type) {
+      whereClause.type = user.type;
+    }
+    if (user.status) {
+      whereClause.status = user.status;
+    }
+    if (user.registered_date) {
+      whereClause.registered_date = user.registered_date;
+    }
+
+    // Query the database using the dynamically built where clause
     const users = await this.app.model.ApplicationUser.findOne({
-      where: {
-        email: user.email,
-        password: user.password,
-      },
+      where: whereClause,
     });
 
     return users;
   }
   // Find User Verification
-  // async findUserVerification(user) {
-  //   console.log('-----------------findUserVerification-----------------');
-  //   console.log(user);
-  //   // Find user on database
-  //   const userVerifications = await this.app.model.UserVerification.findOne({
-  //     where: {
-  //       app_user_id: user.app_user_id,
-  //     },
-  //   });
+  async findUserVerification(userVerification) {
+    console.log('-----------------findUserVerification-----------------');
+    console.log(userVerification);
+    // Find user verification on database
+    // Dynamically build the `where` clause by including only the defined properties
+    const whereClause = {};
 
-  //   return userVerifications;
-  // }
+    if (userVerification.verification_id) {
+      whereClause.verification_id = userVerification.verification_id;
+    }
+    if (userVerification.app_user_id) {
+      whereClause.app_user_id = userVerification.app_user_id;
+    }
+    if (userVerification.server_ref) {
+      whereClause.server_ref = userVerification.server_ref;
+    }
+    if (userVerification.otp) {
+      whereClause.code = userVerification.otp;
+    }
+    if (userVerification.type) {
+      whereClause.type = userVerification.type;
+    }
+    if (userVerification.status) {
+      whereClause.status = userVerification.status;
+    }
+    if (userVerification.expiration_date) {
+      whereClause.expiration_date = userVerification.expiration_date;
+    }
+    if (userVerification.updated_date) {
+      whereClause.updated_date = userVerification.updated_date;
+    }
+
+    // Find user verification in the database
+    const userVerifications = await this.app.model.UserVerification.findOne({
+      where: whereClause,
+    });
+
+    return userVerifications;
+  }
 }
 
 module.exports = UserService;
