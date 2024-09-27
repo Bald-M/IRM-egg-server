@@ -55,8 +55,8 @@ module.exports = appInfo => {
   // NodeMailer
   exports.mail = {
     service: 'Gmail',
-    user: 'zhang241166@gmail.com',
-    pass: 'ihqf eewy rehi htjr',
+    user: 'zihanzhang0628@gmail.com',
+    pass: 'ifzt akwf trta kajd',
     sender: 'Zihan Zhang',
   };
 
