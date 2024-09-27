@@ -354,8 +354,8 @@ class LoginController extends Controller {
       // Update OTP & Expiration
       const OTP = generateVerificationCode(6);
       const currentDate = new Date();
-      // After 5 minutes
-      const expirationDate = new Date(currentDate.getTime() + 5 * 60000);
+      // After 30 minutes
+      const expirationDate = new Date(currentDate.getTime() + 30 * 60000);
       // update server ref as well
       const updateData = {
         code: OTP,
