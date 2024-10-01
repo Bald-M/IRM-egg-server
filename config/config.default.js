@@ -14,7 +14,11 @@ module.exports = appInfo => {
   config.keys = appInfo.name + '_1724928219233_4054';
 
   // add your middleware config here
+  // 'jwtAuth'
   config.middleware = [];
+
+  // Exclude token verify router
+  // config.jwtAuth = {};
 
   // add your user config here
   const userConfig = {

@@ -148,9 +148,9 @@ class LoginController extends Controller {
         email: users.email,
         type: users.type,
       }, ctx.app.config.jwt.secret, {
-        // 30 = 30 sec
+        // 1m = 60000 ms
         // 1h = 1 hour
-        expiresIn: '1h',
+        expiresIn: '3h',
       });
       ctx.status = 200;
       returnMap = {

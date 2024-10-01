@@ -3,7 +3,7 @@
 /**
  * Validate the password against specific criteria.
  * @param {string} password - The password to validate.
- * @returns {string|null} - Returns an error message if invalid, otherwise null.
+ * @return {string|null} - Returns an error message if invalid, otherwise null.
  */
 function validatePassword(password) {
   const hasUpperCase = /[A-Z]/.test(password);
