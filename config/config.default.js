@@ -15,10 +15,12 @@ module.exports = appInfo => {
 
   // add your middleware config here
   // 'jwtAuth'
-  config.middleware = [];
+  config.middleware = [ 'jwtAuth' ];
 
   // Exclude token verify router
-  // config.jwtAuth = {};
+  config.jwtAuth = {
+    match: [ '/api/completeApplication' ],
+  };
 
   // add your user config here
   const userConfig = {

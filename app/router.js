@@ -18,4 +18,6 @@ module.exports = app => {
   router.post('/api/forgotPassVerify', controller.login.forgotPasswordVerify);
   // Reset Password Router
   router.post('/api/forgotPassChange', controller.login.forgotPasswordChange);
+  // Submit Student Application
+  router.post('/api/completeApplication', controller.user.completeApplication);
 };

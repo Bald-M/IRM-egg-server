@@ -10,7 +10,7 @@ module.exports = (app) => {
     {
       app_user_id: { type: INTEGER, primaryKey: true, autoIncrement: true },
       username: STRING(40),
-      email: STRING(0),
+      email: STRING(80),
       password: STRING(225),
       type: ENUM('Student', 'Client', 'IRM User', 'Admin'),
       status: ENUM('Pending', 'Active', 'Blocked', 'Removed'),

@@ -152,6 +152,14 @@ class LoginController extends Controller {
         // 1h = 1 hour
         expiresIn: '3h',
       });
+
+      // Insert token to authentication_user table
+      const token_row = {
+        app_user_id: users.app_user_id,
+        token,
+      };
+      await this.app.model.AuthenticationToken.upsert(token_row);
+
       ctx.status = 200;
       returnMap = {
         auth_key: token,
@@ -336,9 +344,19 @@ class LoginController extends Controller {
   async forgotPasswordRequest() {
     const { ctx } = this;
     ctx.body = ctx.request.body;
-    // const email = ctx.body.email;
+    const email = ctx.body.email;
     let returnMap = {};
     try {
+      if (email === '') {
+        throw new Error('Forgot Password Verification Error', { cause: 'Please provide email' });
+      }
+
+      const emailError = validateEmail(email);
+
+      if (!emailError) {
+        throw new Error('Forgot Password Verification Error', { cause: 'Please provide valid email address' });
+      }
+
       const users = await this.ctx.service.userService.findUser(ctx.body);
 
       if (!users) {
@@ -373,8 +391,16 @@ class LoginController extends Controller {
         returnMap = { error: 'Something went wrong. Please try again later' };
       }
       switch (error.cause) {
+        case 'Please provide email':
+          ctx.status = 404;
+          returnMap = { error: error.cause };
+          break;
         case 'Email is not registered':
           ctx.status = 404;
+          returnMap = { error: error.cause };
+          break;
+        case 'Please provide valid email address':
+          ctx.status = 401;
           returnMap = { error: error.cause };
           break;
         default:
@@ -400,7 +426,7 @@ class LoginController extends Controller {
       const userVerifications = await this.ctx.service.userService.findUserVerification(ctx.body);
 
       if (!userVerifications) {
-        return;
+        throw new Error('Forgot Password Verification Error', { cause: 'server_ref is invalid. It cannot match' });
       }
 
       if (otp === '' || server_ref === '' || email === '') {
@@ -438,6 +464,10 @@ class LoginController extends Controller {
           ctx.status = 410;
           returnMap = { error: error.cause };
           break;
+        case 'server_ref is invalid. It cannot match':
+          ctx.status = 401;
+          returnMap = { error: error.cause };
+          break;
         default:
           ctx.status = 500;
           returnMap = { error: 'Something went wrong. Please try again later' };
@@ -458,8 +488,17 @@ class LoginController extends Controller {
     const password = ctx.body.password;
     try {
 
-      if (email === '' || password === '' || server_ref === '' || otp === '') {
+      if (email === '' || server_ref === '' || otp === '') {
         throw new Error('Forgot Password Verification Error', { cause: 'server_ref, email or OTP is empty' });
+      }
+
+      if (password === '') {
+        throw new Error('Forgot Password Verification Error', { cause: 'Please provide password' });
+      }
+
+      const emailError = validateEmail(email);
+      if (!emailError) {
+        throw new Error('Forgot Password Verification Error', { cause: 'Please provide valid email address' });
       }
 
       const passwordError = validatePassword(password);
@@ -475,7 +514,7 @@ class LoginController extends Controller {
 
       console.log(users);
       if (!users) {
-        return;
+        throw new Error('Forgot Password Verification Error', { cause: 'Email address did not match' });
       }
 
       const userVerifications = await this.app.model.UserVerification.findOne({
@@ -517,6 +556,18 @@ class LoginController extends Controller {
       switch (error.cause) {
         case 'server_ref, email or OTP is empty':
           ctx.status = 400;
+          returnMap = { error: error.cause };
+          break;
+        case 'Email address did not match':
+          ctx.status = 401;
+          returnMap = { error: error.cause };
+          break;
+        case 'Please provide password':
+          ctx.status = 404;
+          returnMap = { error: error.cause };
+          break;
+        case 'Please provide valid email address':
+          ctx.status = 404;
           returnMap = { error: error.cause };
           break;
         case 'Password must include uppercase, lowercase letters, and numbers and must be at least 8 digits':

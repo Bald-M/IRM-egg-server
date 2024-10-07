@@ -28,8 +28,23 @@ module.exports = (options) => {
       // 使用 jwt 验证 token
       const decoded = ctx.app.jwt.verify(authToken, ctx.app.config.jwt.secret);
 
+      // 在数据库中查询此用户的 token 是否与传递的 token 一致
+      const userTokenRecord = await ctx.app.model.AuthenticationToken.findOne({
+        where: {
+          app_user_id: decoded.id,
+          token: authToken,
+        },
+      });
+
+      if (!userTokenRecord) {
+        // 如果数据库中没有找到匹配的 token，说明 token 已被替换或无效
+        ctx.status = 401;
+        ctx.body = { error: 'Authentication failed: Token mismatch or not found' };
+        return;
+      }
+
       // 将解码后的用户信息添加到 ctx.state，供后续中间件使用
-      ctx.state.user = decoded;
+      // ctx.state.user = decoded;
 
       // 验证成功，继续处理请求
       await next();
@@ -41,25 +56,3 @@ module.exports = (options) => {
   };
 };
 
-// function jwtAuth(ctx, next) {
-//   const token = ctx.request.headers.authorization;
-//   if (!token || token.startsWith('Bearer ')) {
-//     ctx.status = 401;
-//     ctx.body = { error: 'Authentication failed: No token provided' };
-//     return;
-//   }
-
-//   try {
-//     const authToken = token.split(' ')[1];
-//     const decoded = ctx.app.jwt.verify(authToken, ctx.app.config.jwt.secret);
-//     ctx.state.user = decoded;
-//     return next();
-//   } catch (err) {
-//     ctx.status = 401;
-//     ctx.body = { error: 'Authentication failed: Invalid or expired token' };
-//   }
-// }
-
-// module.exports = {
-//   jwtAuth,
-// };
