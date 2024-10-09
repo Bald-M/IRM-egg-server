@@ -20,4 +20,6 @@ module.exports = app => {
   router.post('/api/forgotPassChange', controller.login.forgotPasswordChange);
   // Submit Student Application
   router.post('/api/completeApplication', controller.user.completeApplication);
+  // Get Student Profile Data
+  router.post('/api/userProfileData', controller.user.getStudentProfileData);
 };

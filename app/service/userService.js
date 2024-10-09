@@ -31,7 +31,7 @@ class UserService extends Service {
   }
   async addStudent(student) {
     console.log('-----------------Add Student-----------------');
-    const students = await this.app.model.Student.create(student);
+    const students = await this.app.model.Student.upsert(student);
     return students;
   }
   // Add User Verification Method

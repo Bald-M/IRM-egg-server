@@ -19,7 +19,7 @@ module.exports = appInfo => {
 
   // Exclude token verify router
   config.jwtAuth = {
-    match: [ '/api/completeApplication' ],
+    match: [ '/api/completeApplication', '/api/userProfileData' ],
   };
 
   // add your user config here

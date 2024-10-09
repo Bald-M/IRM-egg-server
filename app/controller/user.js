@@ -132,6 +132,48 @@ class UserController extends Controller {
     }
     ctx.body = returnMap;
   }
+  async getStudentProfileData() {
+    const { ctx } = this;
+    ctx.body = ctx.request.body;
+    const user_id = ctx.body.user_id;
+    let returnMap = {};
+
+    try {
+      if (user_id === '') {
+        throw new Error('Get Student Profile Data Error', { cause: 'Please provide user id' });
+      }
+
+      const student = await this.app.model.Student.findOne({
+        where: { app_user_id: user_id },
+      });
+
+      if (!student) {
+        throw new Error('Get Student Profile Data Error', { cause: 'User is not exist' });
+      }
+
+      console.log(student);
+      ctx.status = 200;
+      returnMap = { student };
+
+    } catch (error) {
+      console.log(error);
+      switch (error.cause) {
+        case 'Please provide user id':
+          ctx.status = 400;
+          returnMap = { error: error.cause };
+          break;
+        case 'User is not exist':
+          ctx.status = 404;
+          returnMap = { error: error.cause };
+          break;
+        default:
+          ctx.status = 500;
+          returnMap = { error: 'Something went wrong. Please try again later' };
+          break;
+      }
+    }
+    ctx.body = returnMap;
+  }
 }
 
 module.exports = UserController;
