@@ -46,9 +46,9 @@ class LoginController extends Controller {
 
       // If password doesn not meet the requirement
       // Lowercase + Uppercase letters + numbers, min 8 digits
-      const passwordError = validatePassword(ctx.body.password);
+      const passwordError = validatePassword(password);
       if (!passwordError) {
-        throw new Error('Registration Verification Error', { error: 'Password must include uppercase, lowercase letters, and numbers and must be at least 8 digits' });
+        throw new Error('Registration Verification Error', { cause: 'Password must include uppercase, lowercase letters, and numbers and must be at least 8 digits' });
       }
 
       // Call addUser method from userService
@@ -72,6 +72,9 @@ class LoginController extends Controller {
         ctx.status = 409;
         returnMap = { error: 'Email already registered, Please use another email or Sign In' };
       } else if (error.name === 'SequelizeConnectionError') {
+        ctx.status = 500;
+        returnMap = { error: 'Something went wrong. Please try again later' };
+      } else if (error.name === 'SequelizeDatabaseError') {
         ctx.status = 500;
         returnMap = { error: 'Something went wrong. Please try again later' };
       }
@@ -104,6 +107,7 @@ class LoginController extends Controller {
         default:
           ctx.status = 500;
           returnMap = { error: 'Something went wrong. Please try again later' };
+          // returnMap = { error: error.cause };
           break;
       }
 
@@ -121,7 +125,7 @@ class LoginController extends Controller {
     const email = ctx.body.email;
     const password = ctx.body.password;
     let returnMap = {};
-    console.log(ctx.body);
+    // console.log(ctx.body);
 
 
     try {
@@ -129,8 +133,11 @@ class LoginController extends Controller {
         throw new Error('Login Verification Error', { cause: 'Please provide email or password' });
       }
 
-      const users = await this.ctx.service.userService.findUser(ctx.body);
-      console.log(users);
+      const users = await this.app.model.ApplicationUser.findOne({
+        where: { email, password },
+      });
+
+      // console.log(users);
 
       if (users === null) {
         throw new Error('Login Verification Error', { cause: 'Invalid username or password' });
@@ -191,7 +198,9 @@ class LoginController extends Controller {
         case 'Sorry, account need to be actived':
           ctx.status = 403;
           {
-            const users = await this.ctx.service.userService.findUser(ctx.body);
+            const users = await this.app.model.ApplicationUser.findOne({
+              where: { email, password },
+            });
             // Generate New OTP & Server Ref
             const OTP = generateVerificationCode(6);
             const serverRef = uuid.v4();
@@ -228,7 +237,9 @@ class LoginController extends Controller {
     let returnMap = {};
     console.log(ctx.body);
     try {
-      const userVerifications = await this.ctx.service.userService.findUserVerification(ctx.body);
+      const userVerifications = await this.app.model.UserVerification.findOne({
+        where: { server_ref, code: OTP },
+      });
       console.log(userVerifications);
 
       if (OTP === '' || server_ref === '') {
@@ -298,7 +309,9 @@ class LoginController extends Controller {
     const server_ref = ctx.body.server_ref;
     let returnMap = {};
     try {
-      const userVerifications = await this.ctx.service.userService.findUserVerification(ctx.body);
+      const userVerifications = await this.app.model.UserVerification.findOne({
+        where: { server_ref },
+      });
       // console.log(ctx.body);
       console.log(userVerifications);
 
@@ -357,7 +370,9 @@ class LoginController extends Controller {
         throw new Error('Forgot Password Verification Error', { cause: 'Please provide valid email address' });
       }
 
-      const users = await this.ctx.service.userService.findUser(ctx.body);
+      const users = await this.app.model.ApplicationUser.findOne({
+        where: { email },
+      });
 
       if (!users) {
         throw new Error('Forgot Password Verification Error', { cause: 'Email is not registered' });
@@ -418,18 +433,21 @@ class LoginController extends Controller {
     ctx.body = ctx.request.body;
     console.log(ctx.body);
     const server_ref = ctx.body.server_ref;
-    const otp = ctx.body.otp;
+    const OTP = ctx.body.otp;
     const email = ctx.body.email;
     let returnMap = {};
 
     try {
-      const userVerifications = await this.ctx.service.userService.findUserVerification(ctx.body);
+      // const userVerifications = await this.ctx.service.userService.findUserVerification(ctx.body);
+      const userVerifications = await this.app.model.UserVerification.findOne({
+        where: { server_ref, code: OTP },
+      });
 
       if (!userVerifications) {
         throw new Error('Forgot Password Verification Error', { cause: 'server_ref is invalid. It cannot match' });
       }
 
-      if (otp === '' || server_ref === '' || email === '') {
+      if (OTP === '' || server_ref === '' || email === '') {
         throw new Error('Forgot Password Verification Error', { cause: 'server_ref, email or OTP is empty' });
       }
 
@@ -439,7 +457,7 @@ class LoginController extends Controller {
         throw new Error('Forgot Password Verification Error', { cause: 'Invalid OTP. OTP has expired' });
       }
 
-      if (otp === userVerifications.code) {
+      if (OTP === userVerifications.code) {
         ctx.body = 200;
         returnMap = { description: 'OTP Matched' };
       } else {

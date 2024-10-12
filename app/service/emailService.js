@@ -1,6 +1,8 @@
 'use strict';
 const { Service } = require('egg');
 const nodemailer = require('nodemailer');
+const fs = require('fs');
+const path = require('path');
 
 class EmailService extends Service {
   async sendOTP(server_ref) {
@@ -28,13 +30,25 @@ class EmailService extends Service {
         pass: mail.pass,
       },
     });
+
+    // Read the HTML template
+    const htmlTemplatePath = path.join(app.baseDir, 'app/public/emails/verification_email.html');
+    let htmlContent = fs.readFileSync(htmlTemplatePath, 'utf8');
+    htmlContent = htmlContent.replace('{{verificationCode}}', OTP);
+
     // Email Options
+    // const mailOptions = {
+    //   from: `"${mail.sender}" <${mail.user}>`, // sender address
+    //   to: user.email, // list of receivers
+    //   subject: 'Your Verification Code(No Reply)', // Subject line
+    //   text: `Your OTP is: ${OTP}`,
+    //   html: `<b>Your OTP is: ${OTP}</b>`, // html body
+    // };
     const mailOptions = {
       from: `"${mail.sender}" <${mail.user}>`, // sender address
       to: user.email, // list of receivers
-      subject: 'Your IRM OTP(No Reply)', // Subject line
-      text: `Your OTP is: ${OTP}`,
-      html: `<b>Your OTP is: ${OTP}</b>`, // html body
+      subject: 'Your Verification Code(No Reply)', // Subject line
+      html: htmlContent,
     };
     // Send Email
     await transporter.sendMail(mailOptions);

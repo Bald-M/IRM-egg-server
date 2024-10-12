@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verification Email</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: #1E5192;
+      height: 100vh;
+    }
+
+    .box {
+      width: 400px;
+      padding: 20px;
+      border-radius: 24px;
+      background-color: rgba(250, 250, 250, 0.9);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 24px;
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    p {
+      color: #555;
+      margin: 10px 0;
+      font-size: 16px;
+    }
+
+    p strong {
+      font-size: 22px;
+      color: #1E5192;
+    }
+
+    .expiration {
+      color: #E74C3C; /* 红色，提示用户注意 */
+    }
+
+    .footer {
+      margin-top: 20px;
+      font-size: 14px;
+      color: #999;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="box">
+      <h1>Here is your one-time password</h1>
+      <p>Your verification code is: <strong>{{verificationCode}}</strong></p>
+      <p class="expiration">This code will expire in 30 minutes.</p>
+      <p class="footer">Thank you for using our service!</p>
+    </div>
+  </div>
+</body>
+
+</html>

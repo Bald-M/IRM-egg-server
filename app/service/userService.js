@@ -68,6 +68,7 @@ class UserService extends Service {
   }
   // Find User Method
   // Valid email and password
+  // Bugs !!!
   async findUser(user) {
     console.log('-----------------findUser-----------------');
     console.log(user);
@@ -106,6 +107,7 @@ class UserService extends Service {
     return users;
   }
   // Find User Verification
+  // Bugs !!!
   async findUserVerification(userVerification) {
     console.log('-----------------findUserVerification-----------------');
     console.log(userVerification);
@@ -148,91 +150,3 @@ class UserService extends Service {
 }
 
 module.exports = UserService;
-
-// user
-// -----------------addUser-----------------
-// {
-//   email: '1@student.wintec.ac.nz',
-//   password: '12345678xA',
-//   role: 'Student',
-//   username: '1',
-//   registered_date: 2024-08-30T13:29:45.742Z
-// }
-
-// users
-// application_user {
-//   dataValues: {
-//     app_user_id: 3,
-//     username: 'jasonb',
-//     email: 'jasonb@student.wintec.ac.nz',
-//     password: '12345678Abc',
-//     type: 'Student',
-//     status: 'Pending',
-//     registered_date: 2024-09-11T01:23:29.000Z
-//   },
-//   _previousDataValues: {
-//     app_user_id: 3,
-//     username: 'jasonb',
-//     email: 'jasonb@student.wintec.ac.nz',
-//     password: '12345678Abc',
-//     type: 'Student',
-//     status: 'Pending',
-//     registered_date: 2024-09-11T01:23:29.000Z
-//   },
-//   uniqno: 1,
-//   _changed: Set(0) {},
-//   _options: {
-//     isNewRecord: false,
-//     _schema: null,
-//     _schemaDelimiter: '',
-//     raw: true,
-//     attributes: [
-//       'app_user_id',
-//       'username',
-//       'email',
-//       'password',
-//       'type',
-//       'status',
-//       'registered_date'
-//     ]
-//   },
-//   isNewRecord: false
-// }
-// application_user {
-//   dataValues: {
-//     app_user_id: 3,
-//     username: 'jasonb',
-//     email: 'jasonb@student.wintec.ac.nz',
-//     password: '12345678Abc',
-//     type: 'Student',
-//     status: 'Pending',
-//     registered_date: 2024-09-11T01:23:29.000Z
-//   },
-//   _previousDataValues: {
-//     app_user_id: 3,
-//     username: 'jasonb',
-//     email: 'jasonb@student.wintec.ac.nz',
-//     password: '12345678Abc',
-//     type: 'Student',
-//     status: 'Pending',
-//     registered_date: 2024-09-11T01:23:29.000Z
-//   },
-//   uniqno: 1,
-//   _changed: Set(0) {},
-//   _options: {
-//     isNewRecord: false,
-//     _schema: null,
-//     _schemaDelimiter: '',
-//     raw: true,
-//     attributes: [
-//       'app_user_id',
-//       'username',
-//       'email',
-//       'password',
-//       'type',
-//       'status',
-//       'registered_date'
-//     ]
-//   },
-//   isNewRecord: false
-// }
