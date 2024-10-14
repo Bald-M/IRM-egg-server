@@ -506,9 +506,9 @@ class LoginController extends Controller {
     const password = ctx.body.password;
     try {
 
-      if (email === '' || server_ref === '' || otp === '') {
-        throw new Error('Forgot Password Verification Error', { cause: 'server_ref, email or OTP is empty' });
-      }
+      // if (email === '' || server_ref === '' || otp === '') {
+      //   throw new Error('Forgot Password Verification Error', { cause: 'server_ref, email or OTP is empty' });
+      // }
 
       if (password === '') {
         throw new Error('Forgot Password Verification Error', { cause: 'Please provide password' });
@@ -538,6 +538,7 @@ class LoginController extends Controller {
       const userVerifications = await this.app.model.UserVerification.findOne({
         where: {
           server_ref,
+          app_user_id: users.app_user_id,
         },
       });
 
