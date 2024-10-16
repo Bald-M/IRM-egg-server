@@ -10,54 +10,89 @@
       font-family: Arial, sans-serif;
       margin: 0;
       padding: 0;
+      width: 100% !important; /* Ensure full width scaling */
+      -webkit-text-size-adjust: 100%; /* Prevent font resizing on mobile */
+      -ms-text-size-adjust: 100%; /* Ensure consistent text size on mobile */
     }
 
+    /* Container styling to center content and set background */
     .container {
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      width: 100%;
       background-color: #1E5192;
-      height: 100vh;
+      padding: 20px 0;
     }
 
+    /* Main box styling for the content */
     .box {
-      width: 400px;
+      max-width: 400px;
+      margin: 0 auto;
       padding: 20px;
       border-radius: 24px;
       background-color: rgba(250, 250, 250, 0.9);
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
       text-align: center;
     }
 
+    /* Heading style */
     h1 {
-      font-size: 24px;
+      font-size: 1.5rem;  /* Relative font size for scalability */
       color: #333;
       margin-bottom: 20px;
     }
 
+    /* Paragraph style */
     p {
       color: #555;
       margin: 10px 0;
-      font-size: 16px;
+      font-size: 1rem;
     }
 
+    /* Bold text inside paragraphs (verification code) */
     p strong {
-      font-size: 22px;
+      font-size: 1.375rem; /* Slightly larger font for emphasis */
       color: #1E5192;
     }
 
+    /* Expiration message in red */
     .expiration {
-      color: #E74C3C; /* 红色，提示用户注意 */
+      color: #E74C3C; /* Red to emphasize expiration warning */
     }
 
+    /* Footer text style */
     .footer {
       margin-top: 20px;
-      font-size: 14px;
+      font-size: 0.875rem; /* Smaller text for less important info */
       color: #999;
+    }
+
+    /* Logo styling */
+    .logo {
+      width: 100%; /* Ensure it scales with the container */
+      max-width: 350px; /* Limit the maximum width */
+    }
+
+    /* Responsive design for small screens */
+    @media (max-width: 600px) {
+      .box {
+        width: 90%; /* Reduce width on smaller screens */
+        padding: 15px; /* Adjust padding */
+      }
+
+      h1 {
+        font-size: 1.25rem;
+      }
+
+      p {
+        font-size: 0.875rem;
+      }
+
+      p strong {
+        font-size: 1.25rem;
+      }
+
+      .logo {
+        max-width: 250px; /* Reduce logo size on small screens */
+      }
     }
   </style>
 </head>
@@ -65,9 +100,15 @@
 <body>
   <div class="container">
     <div class="box">
+      <!-- Logo image -->
+      <img src="https://www.wintec.ac.nz/ResourcePackages/WintecPublicWebsite/assets/dist/images/brand/logo-wintec.svg" class="logo">
+      <!-- Email heading -->
       <h1>Here is your one-time password</h1>
+      <!-- Verification code section -->
       <p>Your verification code is: <strong>{{verificationCode}}</strong></p>
+      <!-- Expiration message -->
       <p class="expiration">This code will expire in 30 minutes.</p>
+      <!-- Footer message -->
       <p class="footer">Thank you for using our service!</p>
     </div>
   </div>
