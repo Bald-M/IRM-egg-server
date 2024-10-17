@@ -28,6 +28,8 @@ class UserController extends Controller {
     const preferred_companies = ctx.request.body.preferred_companies;
     const first_preference = ctx.request.body.first_preference;
     const second_preference = ctx.request.body.second_preference;
+    const gender = ctx.request.body.gender;
+    const student_type = ctx.request.body.student_type;
     let returnMap = {};
     const token = ctx.request.headers.authorization;
     const authToken = token.split(' ')[1];
@@ -53,6 +55,8 @@ class UserController extends Controller {
       preferred_companies,
       first_preference,
       second_preference,
+      gender,
+      student_type,
     };
 
 
@@ -101,6 +105,8 @@ class UserController extends Controller {
         preferred_companies: JSON.stringify(preferred_companies),
         first_preference,
         second_preference,
+        gender,
+        student_type,
       };
       await this.ctx.service.userService.addStudent(student);
       ctx.status = 200;

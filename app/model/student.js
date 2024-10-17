@@ -10,6 +10,8 @@ module.exports = (app) => {
       app_user_id: INTEGER,
       name: STRING(255),
       wintec_id: STRING(20),
+      gender: ENUM('Male', 'Female'),
+      student_type: ENUM('Domestic Student', 'International Student'),
       personal_email: STRING(255),
       student_email: STRING(255),
       phone_number: STRING(255),
