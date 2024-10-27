@@ -18,8 +18,12 @@ module.exports = app => {
   router.post('/api/forgotPassVerify', controller.login.forgotPasswordVerify);
   // Reset Password Router
   router.post('/api/forgotPassChange', controller.login.forgotPasswordChange);
+  // Get Token Expiration Date Time
+  router.post('/api/getTokenExpirationDate', controller.login.getTokenExpirationDate);
   // Submit Student Application
   router.post('/api/completeApplication', controller.user.completeApplication);
   // Get Student Profile Data
   router.post('/api/userProfileData', controller.user.getStudentProfileData);
+  // Get All Student
+  router.get('/api/allStudents', controller.user.getAllStudent);
 };

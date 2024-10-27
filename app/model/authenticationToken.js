@@ -10,6 +10,7 @@ module.exports = (app) => {
       auth_token_id: { type: INTEGER, primaryKey: true, autoIncrement: true },
       app_user_id: INTEGER,
       token: STRING(255),
+      expiration_date: DATE,
       updated_date: DATE,
     },
     {

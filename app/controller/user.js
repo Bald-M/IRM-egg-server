@@ -180,9 +180,39 @@ class UserController extends Controller {
     }
     ctx.body = returnMap;
   }
-}
+  async getAllStudent() {
+    const { ctx } = this;
+    ctx.body = ctx.request.body;
+    const token = ctx.request.headers.authorization;
+    const authToken = token.split(' ')[1];
+    const decoded = ctx.app.jwt.verify(authToken, ctx.app.config.jwt.secret);
+    console.log(decoded);
+    let returnMap = {};
 
+    try {
+      if (decoded.type !== 'Admin' && decoded.type !== 'Industry') {
+        throw new Error('Error', { cause: 'Only admin and industry client can access this resource' });
+      }
+
+      const students = await this.app.model.Student.findAll();
+      ctx.status = 200;
+      returnMap = { students };
+    } catch (error) {
+      console.log(error);
+      switch (error.cause) {
+        case 'Only admin and industry client can access this resource':
+          ctx.status = 401;
+          returnMap = { error: error.cause };
+          break;
+        default:
+          break;
+      }
+    }
+    ctx.body = returnMap;
+  }
+}
 module.exports = UserController;
+// module.exports = UserController;
 
 // {
 //   name: 'zihan',

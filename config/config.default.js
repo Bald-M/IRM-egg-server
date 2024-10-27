@@ -17,9 +17,9 @@ module.exports = appInfo => {
   // 'jwtAuth'
   config.middleware = [ 'jwtAuth' ];
 
-  // Exclude token verify router
+  // Token verify router
   config.jwtAuth = {
-    match: [ '/api/completeApplication', '/api/userProfileData' ],
+    match: [ '/api/completeApplication', '/api/userProfileData', '/api/allStudents' ],
   };
 
   // add your user config here
@@ -47,6 +47,11 @@ module.exports = appInfo => {
   };
 
   // Sequelize
+  // NZ Auckland Time Zone
+  const utcDate = new Date();
+  const timezoneOffsetInMinutes = utcDate.getTimezoneOffset();
+  const timezoneOffsetInHours = timezoneOffsetInMinutes / 60;
+  const formattedOffset = timezoneOffsetInHours >= 0 ? `UTC-${Math.abs(timezoneOffsetInHours).toString().padStart(2, '0')}:00` : `UTC+${Math.abs(timezoneOffsetInHours).toString().padStart(2, '0')}:00`;
   exports.sequelize = {
     dialect: 'mysql',
     host: '10.150.2.100',
@@ -54,8 +59,7 @@ module.exports = appInfo => {
     user: 'root',
     password: 'ABCabc_123',
     database: 'internship_application',
-    // NZ Auckland Time Zone
-    timezone: '+12:00',
+    timezone: formattedOffset.split('UTC')[1],
   };
 
   // NodeMailer

@@ -160,10 +160,12 @@ class LoginController extends Controller {
         expiresIn: '3h',
       });
 
+      const expiration_date = new Date(Date.now() + 3 * 60 * 60 * 1000);
       // Insert token to authentication_user table
       const token_row = {
         app_user_id: users.app_user_id,
         token,
+        expiration_date,
       };
       await this.app.model.AuthenticationToken.upsert(token_row);
 
@@ -611,6 +613,52 @@ class LoginController extends Controller {
           break;
       }
     }
+    ctx.body = returnMap;
+  }
+  async getTokenExpirationDate() {
+    const { ctx } = this;
+    ctx.body = ctx.request.body;
+    const app_user_id = ctx.body.app_user_id;
+    let returnMap = {};
+
+    try {
+      if (!app_user_id) {
+        throw new Error('App User ID Verification Error', { cause: 'App User Id is empty' });
+      }
+
+      const application_token = await ctx.app.model.AuthenticationToken.findOne({
+        where: {
+          app_user_id,
+        },
+      });
+
+      if (!application_token) {
+        throw new Error('App User ID Verification Error', { cause: 'Invalid app user id' });
+      }
+
+      ctx.status = 200;
+      returnMap = {
+        app_uid: app_user_id,
+        expiration_date: application_token.expiration_date,
+      };
+
+    } catch (error) {
+      console.log(error);
+      switch (error.cause) {
+        case 'Invalid app user id':
+          ctx.status = 401;
+          returnMap = { error: error.cause };
+          break;
+        case 'App User Id is empty':
+          ctx.status = 404;
+          returnMap = { error: error.cause };
+          break;
+        default:
+          returnMap = { error: 'Something went wrong. Please try again later' };
+          break;
+      }
+    }
+
     ctx.body = returnMap;
   }
 }
