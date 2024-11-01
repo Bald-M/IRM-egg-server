@@ -13,6 +13,7 @@ module.exports = (options) => {
   return async function jwtAuth(ctx, next) {
     // 从请求头中获取 Authorization token
     const token = ctx.request.headers.authorization;
+    console.log(token);
 
     // 如果没有提供 token 或者格式不正确
     if (!token || !token.startsWith('Bearer ')) {

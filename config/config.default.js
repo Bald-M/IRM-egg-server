@@ -19,7 +19,7 @@ module.exports = appInfo => {
 
   // Token verify router
   config.jwtAuth = {
-    match: [ '/api/completeApplication', '/api/userProfileData', '/api/allStudents' ],
+    match: [ '/api/completeApplication', '/api/userProfileData', '/api/allStudents', '/api/getTokenExpirationDate' ],
   };
 
   // add your user config here
@@ -29,22 +29,22 @@ module.exports = appInfo => {
 
   // Mysql
   // https://www.eggjs.org/tutorials/mysql
-  exports.mysql = {
-    client: {
-      host: '47.250.88.49',
-      port: 3306,
-      user: 'root',
-      password: 'ABCabc_123',
-      database: 'internship_application',
-      define: {
-        freezeTableName: true,
-      },
-    },
-    // Mount to app
-    app: true,
-    // Mount to agent
-    agent: false,
-  };
+  // exports.mysql = {
+  //   client: {
+  //     host: '47.250.88.49',
+  //     port: 3306,
+  //     user: 'root',
+  //     password: 'ABCabc_123',
+  //     database: 'internship_application',
+  //     define: {
+  //       freezeTableName: true,
+  //     },
+  //   },
+  //   // Mount to app
+  //   app: true,
+  //   // Mount to agent
+  //   agent: false,
+  // };
 
   // Sequelize
   // NZ Auckland Time Zone
