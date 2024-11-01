@@ -11,7 +11,7 @@ RUN npm install --production
 # Copy App Source Code to the image
 COPY . .
 
-# Set Up Environment Variable
+# Set Up Environment Variables
 ENV NODE_ENV=production \
     DB_HOST=your_db_host \
     DB_USER=your_db_user \
@@ -23,4 +23,4 @@ ENV NODE_ENV=production \
 EXPOSE 7001
 
 # Run App
-CMD npm start
+CMD ["npm", "start"]
