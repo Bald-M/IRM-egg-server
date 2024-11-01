@@ -54,11 +54,11 @@ module.exports = appInfo => {
   const formattedOffset = timezoneOffsetInHours >= 0 ? `UTC-${Math.abs(timezoneOffsetInHours).toString().padStart(2, '0')}:00` : `UTC+${Math.abs(timezoneOffsetInHours).toString().padStart(2, '0')}:00`;
   exports.sequelize = {
     dialect: 'mysql',
-    host: '10.150.2.100',
-    port: 3306,
-    user: 'root',
-    password: 'ABCabc_123',
-    database: 'internship_application',
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
     timezone: formattedOffset.split('UTC')[1],
   };
 
