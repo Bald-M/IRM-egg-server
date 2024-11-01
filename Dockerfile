@@ -6,10 +6,10 @@ WORKDIR /app
 
 # Copy package.json and package-lock.json，then install dependencies
 COPY package*.json ./
-RUN npm install --production
+RUN npm install
 
 # Copy App Source Code to the image
-COPY . .
+COPY . /app
 
 # Set Up Environment Variables
 ENV NODE_ENV=production \
