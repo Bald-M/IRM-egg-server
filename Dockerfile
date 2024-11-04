@@ -19,6 +19,8 @@ ENV NODE_ENV=production \
     DB_NAME=your_db_name \
     DB_PORT=your_db_port
 
+ENV TZ Pacific/Auckland
+
 # Expose Port 7001
 EXPOSE 7001
 
