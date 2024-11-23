@@ -127,7 +127,6 @@ class LoginController extends Controller {
     let returnMap = {};
     // console.log(ctx.body);
 
-
     try {
       if (password === '' || email === '') {
         throw new Error('Login Verification Error', { cause: 'Please provide email or password' });

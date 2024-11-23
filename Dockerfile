@@ -17,9 +17,12 @@ ENV NODE_ENV=production \
     DB_USER=your_db_user \
     DB_PASSWORD=your_db_password \
     DB_NAME=your_db_name \
-    DB_PORT=your_db_port
+    DB_PORT=your_db_port \
+    EMAIL_SERVICE=gmail \
+    EMAIL_USER=your_email_user \
+    EMAIL_PASS=your_email_password
 
-ENV TZ Pacific/Auckland
+ENV TZ=Pacific/Auckland
 
 # Expose Port 7001
 EXPOSE 7001

@@ -68,7 +68,6 @@ class UserService extends Service {
   }
   // Find User Method
   // Valid email and password
-  // Bugs !!!
   async findUser(user) {
     console.log('-----------------findUser-----------------');
     console.log(user);
@@ -107,7 +106,6 @@ class UserService extends Service {
     return users;
   }
   // Find User Verification
-  // Bugs !!!
   async findUserVerification(userVerification) {
     console.log('-----------------findUserVerification-----------------');
     console.log(userVerification);

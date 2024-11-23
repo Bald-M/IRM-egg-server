@@ -1,7 +1,7 @@
 'use strict';
 
 const Controller = require('egg').Controller;
-const { validateEmail } = require('../utils/emailValidation')
+const { validateEmail } = require('../utils/emailValidation');
 
 class UserController extends Controller {
   async completeApplication() {
@@ -212,45 +212,3 @@ class UserController extends Controller {
   }
 }
 module.exports = UserController;
-// module.exports = UserController;
-
-// {
-//   name: 'zihan',
-//   id: '18470661',
-//   personalEmail: '11@qq.com',
-//   studentEmail: '11@qq.com',
-//   phoneNum: '123456',
-//   personalStatement: 'adads',
-//   cv: 'asdad',
-//   linkedin: 'asdasd',
-//   portfolio: 'adadadf',
-//   github: 'afafafa',
-//   grade: 'A grade',
-//   programme: 'Postgraduate Diploma in IT',
-//   areaOfStudy: 'Networking Engineering',
-//   experience: 'asfaf',
-//   courses: 'asfasf',
-//   tutors: 'afafff',
-//   internshipOptions: [
-//     'API Development',
-//     'Data Analysis',
-//     'Mobile App Development',
-//     'Networking'
-//   ],
-//   preferences: [
-//     'Blackout Games',
-//     'Mobile App Development',
-//     'Networking',
-//     'System support - help desk'
-//   ],
-//   firstPreference: 'Internship',
-//   secondPreference: 'Industry'
-// }
-
-// // Accept token from frontend authorization
-// const token = ctx.request.get('Authorization').split(' ')[1];
-// // Use jwt to verify token
-// const re = ctx.app.jwt.verify(token, ctx.app.config.jwt.secret);
-// if (!re.hasOwnProperty('id')) {
-//   ctx.body = { error: 'no token' };
-// }

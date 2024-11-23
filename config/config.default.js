@@ -14,7 +14,6 @@ module.exports = appInfo => {
   config.keys = appInfo.name + '_1724928219233_4054';
 
   // add your middleware config here
-  // 'jwtAuth'
   config.middleware = [ 'jwtAuth' ];
 
   // Token verify router
@@ -27,24 +26,6 @@ module.exports = appInfo => {
     // myAppName: 'egg',
   };
 
-  // Mysql
-  // https://www.eggjs.org/tutorials/mysql
-  // exports.mysql = {
-  //   client: {
-  //     host: '47.250.88.49',
-  //     port: 3306,
-  //     user: 'root',
-  //     password: 'ABCabc_123',
-  //     database: 'internship_application',
-  //     define: {
-  //       freezeTableName: true,
-  //     },
-  //   },
-  //   // Mount to app
-  //   app: true,
-  //   // Mount to agent
-  //   agent: false,
-  // };
 
   // Sequelize
   // NZ Auckland Time Zone
@@ -64,14 +45,13 @@ module.exports = appInfo => {
 
   // NodeMailer
   exports.mail = {
-    service: 'Gmail',
-    user: 'zihanzhang0628@gmail.com',
-    pass: 'ifzt akwf trta kajd',
-    sender: 'Zihan Zhang',
+    service: process.env.EMAIL_SERVICE || 'Gmail',
+    user: process.env.EMAIL_USER || 'zihanzhang0628@gmail.com',
+    pass: process.env.EMAIL_PASS || 'ifzt akwf trta kajd',
+    sender: 'Wintec Centre For IT',
   };
 
   // Security
-  // Need to disable csrf in the future
   exports.security = {
     csrf: {
       enable: false,
